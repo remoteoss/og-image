@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { parseRequest } from './_lib/parser';
+import { parse } from 'url';
 import { getScreenshot } from './_lib/chromium';
 import { getHtml } from './_lib/template';
 
@@ -8,14 +8,14 @@ const isHtmlDebug = process.env.OG_HTML_DEBUG === '1';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
     try {
-        const parsedReq = parseRequest(req);
-        const html = getHtml(parsedReq);
+        const { query } = parse(req.url || '/', true);
+        const html = getHtml(query);
         if (isHtmlDebug) {
             res.setHeader('Content-Type', 'text/html');
             res.end(html);
             return;
         }
-        const { fileType } = parsedReq;
+        const fileType = 'jpeg'
         const file = await getScreenshot(html, fileType, isDev);
         res.statusCode = 200;
         res.setHeader('Content-Type', `image/${fileType}`);
